@@ -33,6 +33,12 @@ $ forge build
 $ forge test
 ```
 
+### Forge remappings
+
+```
+forge remappings > remappings.txt
+```
+
 ### Format
 
 ```shell
