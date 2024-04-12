@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Importing OpenZeppelin's SafeMath library to prevent overflow and underflow
 // And Ownable for ownership control of each fundraising campaign
 import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-import "../lib/openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
 
 // Fundraising campaign contract
 contract Fundraiser is Ownable {
-    using SafeMath for uint256;
 
     // Variables to keep track of the goal, current amount, and contributions
     uint256 public goal;
@@ -23,7 +20,7 @@ contract Fundraiser is Ownable {
     event CampaignCancelled();
 
     // Constructor to initialize the fundraiser with a specific goal
-    constructor(uint256 _goal) {
+    constructor(uint256 _goal, address initialOwner) Ownable(initialOwner) {
         require(_goal > 0, "Goal must be greater than 0");
         goal = _goal;
     }
@@ -33,8 +30,8 @@ contract Fundraiser is Ownable {
         require(msg.value > 0, "Contribution must be greater than 0");
         require(!goalReached, "Goal has already been reached");
 
-        contributions[msg.sender] = contributions[msg.sender].add(msg.value);
-        totalContributed = totalContributed.add(msg.value);
+        contributions[msg.sender] = contributions[msg.sender] + msg.value;
+        totalContributed = totalContributed + msg.value;
         emit ContributionReceived(msg.sender, msg.value);
 
         // Check if the goal has been reached
@@ -45,6 +42,7 @@ contract Fundraiser is Ownable {
             purchase_core();
         }
     }
+
 
     // Function to be executed when the goal is reached
     function purchase_core() internal {
@@ -78,7 +76,7 @@ contract FundraiserFactory {
 
     // Function to create a new fundraiser
     function createFundraiser(uint256 goal) public {
-        Fundraiser newFundraiser = new Fundraiser(goal);
+        Fundraiser newFundraiser = new Fundraiser(goal, msg.sender);
         newFundraiser.transferOwnership(msg.sender); // Transfer ownership to the creator
         fundraisers.push(newFundraiser);
     }

@@ -20,7 +20,7 @@ contract DenverAuctionNFTTest is Test {
     MockNFT nft;
 
     function setUp() public {
-        nft = new DenverAuctionNFT(address(this)); // Deploy the NFT contract
+        nft = new MockNFT(address(this)); // Deploy the NFT contract
     }
 
     function testFailMintNotOwner() public {
@@ -31,10 +31,10 @@ contract DenverAuctionNFTTest is Test {
 
 contract EnglishAuctionTest is Test, MockERC721Receiver {
     EnglishAuction auction;
-    DenverAuctionNFT nft;
+    MockNFT nft;
 
     function setUp() public {
-        nft = new DenverAuctionNFT(address(this)); // Deploy the NFT contract
+        nft = new MockNFT(address(this)); // Deploy the NFT contract
         nft.safeMint(address(this), 1); // Mint an NFT to this contract
         auction = new EnglishAuction(); // Deploy the auction contract without parameters
     }
