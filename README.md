@@ -1,10 +1,7 @@
 # Extension contracts to the Coretieme chain
 
 ## Contracts
-
-### Crowdfunding Purchase
-This Solidity smart contract is designed for organizing multiple fundraising campaigns simultaneously, leveraging OpenZeppelin libraries for security and efficiency. Each campaign can set a specific funding target, and individuals can contribute funds towards reaching this goal. The smart contract features a `purchase_core()` function that activates once the target amount is met; however, if this function fails or reverts for any reason, contributors have the option to withdraw their donations. Additionally, the creator of each fundraising campaign retains the authority to cancel the campaign at any point, enabling the return of contributed funds to their respective donors. This setup ensures transparency, security, and flexibility in fundraising activities on the Ethereum blockchain.
-
+Check the individual `/docs` for each smart contract.
 
 **Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
