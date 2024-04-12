@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 // And Ownable for ownership control of each fundraising campaign
 import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
