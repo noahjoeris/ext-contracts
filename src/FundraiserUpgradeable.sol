@@ -1,34 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-/// @title Factory contract to manage multiple fundraising campaigns
+/// @title FundraiserUpgradeable contract to manage a fundraising campaign. Can be upgraded.
 /// @author Lastic Team
-contract FundraiserFactory {
-    /// @notice Array to store instances of fundraising campaigns
-    Fundraiser[] public fundraisers;
-
-    /// @notice Event to log the creation of a new fundraising campaign
-    event FundraiseCreated(address);
-
-    /// @notice Function to create a new fundraising campaign
-    function createFundraiser(uint256 goal) public {
-        Fundraiser newFundraiser = new Fundraiser(goal); // Factory creates a new non-upgradeable fundraising campaign
-        newFundraiser.transferOwnership(msg.sender);
-        fundraisers.push(newFundraiser);
-        emit FundraiseCreated(address(newFundraiser));
-    }
-
-    /// @notice Function to get the deployed fundraising campaigns
-    function getFundraisers() public view returns (Fundraiser[] memory) {
-        return fundraisers;
-    }
-}
-
-/// @title Fundraiser contract to manage a fundraising campaign
-/// @author Lastic Team
-contract Fundraiser is Ownable {
+contract FundraiserUpgradeable is OwnableUpgradeable {
     /// @notice The goal amount to be raised in the fundraising campaign
     uint256 public goal;
     /// @notice The total amount contributed to the fundraising campaign
@@ -37,7 +15,7 @@ contract Fundraiser is Ownable {
     mapping(address => uint256) public contributions;
     /// @notice Boolean to check if the fundraising campaign has been canceled
     bool public canceled;
-    /// @notice Boolean to check if the fundraising campaign has been succeeded
+    /// @notice Boolean to check if the fundraising campaign has been successful
     bool public succeeded;
 
     // Event declarations
@@ -49,9 +27,10 @@ contract Fundraiser is Ownable {
 
     /// @notice initializes the fundraising campaign with a specific goal.
     /// @param _goal The goal amount to be raised in the fundraising campaign.
-    constructor(uint256 _goal) Ownable(msg.sender) {
+    function initialize(uint256 _goal) public initializer {
         require(_goal > 0, "Goal must be greater than 0");
         goal = _goal;
+        __Ownable_init(msg.sender);
     }
 
     /// @notice Function to contribute to the fundraising campaign
