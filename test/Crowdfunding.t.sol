@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {Fundraiser} from "../src/Crowdfunding.sol";
+import {console} from "forge-std/console.sol";
 
 contract FundraiserTest is Test {
     Fundraiser fundraiser;
@@ -11,21 +12,20 @@ contract FundraiserTest is Test {
     address contributor2;
 
     function setUp() public {
-        owner = address(this);
+        owner = makeAddr("owner");
         contributor = makeAddr("contributor");
         vm.deal(contributor, 5 ether);
         vm.deal(contributor2, 5 ether);
 
         fundraiser = new Fundraiser(1 ether);
-        vm.startPrank(owner);
         fundraiser.transferOwnership(owner);
-        vm.stopPrank();
     }
 
     function test_SetUpState() public {
         assertEq(fundraiser.goal(), 1 ether);
         assertFalse(fundraiser.canceled());
         assertFalse(fundraiser.succeeded());
+        assertEq(fundraiser.owner(), owner);
     }
 
     function test_contribute_Works() public {
@@ -36,6 +36,7 @@ contract FundraiserTest is Test {
     }
 
     function test_contribute_RevertWhen_ContributingAfterCancel() public {
+        vm.prank(owner);
         fundraiser.cancelFundraiser();
         vm.expectRevert("The fundraising was canceled");
         vm.prank(contributor);
@@ -101,19 +102,37 @@ contract FundraiserTest is Test {
         fundraiser.withdraw(); // Different contributor - Should revert
     }
 
-    /* function test_payout_Works() public {
+    function test_cancelFundraiser_Works() public {
+        vm.prank(owner);
+        fundraiser.cancelFundraiser();
+        assertTrue(fundraiser.canceled());
+    }
+
+    function test_cancelFundraiser_RevertWhen_CalledNotOwner() public {
+        vm.expectRevert();
+        vm.prank(contributor);
+        fundraiser.cancelFundraiser();
+    }
+
+    function test_cancelFundraiser_RevertWhen_PayoutMade() public {
+        vm.expectRevert();
+        // todo payout
+        fundraiser.cancelFundraiser();
+    }
+
+    function test_payout_Works() public {
+        // reach goal
         vm.prank(contributor);
         fundraiser.contribute{value: 1 ether}();
         assertTrue(fundraiser.goalReached());
+        assertEq(address(fundraiser).balance, fundraiser.totalContributed());
+
+        // payout
         uint256 preBalance = owner.balance;
         fundraiser.payout();
         uint256 postBalance = owner.balance;
-        assertEq(postBalance - preBalance, 1 ether);
-        assertTrue(fundraiser.succeeded());
-    } */
 
-    function test_cancelFundraiser_Works() public {
-        fundraiser.cancelFundraiser();
-        assertTrue(fundraiser.canceled());
+        assertEq(postBalance - preBalance, fundraiser.totalContributed());
+        assertTrue(fundraiser.succeeded());
     }
 }

@@ -68,7 +68,9 @@ contract FundraiserUpgradeable is OwnableUpgradeable {
         require(!canceled, "The fundraising was canceled");
 
         succeeded = true;
-        payable(owner()).transfer(totalContributed);
+        (bool sent, ) = payable(owner()).call{value: totalContributed}("");
+        require(sent, "Failed to payout");
+
         emit Payout(owner(), totalContributed);
     }
 
