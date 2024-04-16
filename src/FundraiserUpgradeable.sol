@@ -36,6 +36,7 @@ contract FundraiserUpgradeable is OwnableUpgradeable {
     /// @notice Function to contribute to the fundraising campaign
     function contribute() public payable {
         require(!canceled, "The fundraising was canceled");
+        require(!succeeded, "Fundraising already completed");
         require(msg.value > 0, "Contribution must be greater than 0");
         require(!goalReached(), "Goal has already been reached");
 
@@ -49,8 +50,21 @@ contract FundraiserUpgradeable is OwnableUpgradeable {
         }
     }
 
-    /// @notice Function to be executed when the goal is reached. Currently not implemented and not supposed to be used.
-    /// @dev Placeholder for bulk coretime purchase logic. In upcoming versions of the contract, this function will make use of moonbeams xcm transact precompile to buy bulk coretime without the owner needing to take action.
+    /** @notice Function to be executed when the goal is reached. Currently not implemented and not supposed to be used.
+     *  @dev Placeholder for bulk coretime purchase logic.
+     *       In upcoming versions of the contract, this function will make use of moonbeams xcm transactor V3 precompile to buy bulk coretime without the owner needing to take action.
+     *       It will make it possible to make xcm calls from this smart contract directly to the coretime chain to buy a core. It will use a computed origin that only this contract has access to.
+     *       Here is a simple pseudocode example how it might look like:
+     * ```
+     * import {XcmTransactorV3} from XCMTransactorV3.sol;
+     *
+     * XcmTransactorV3 xcmTransactor = XcmTransactorV3(transactorAddress);
+     * xcmTransactor.transactThroughSigned(...);
+     * // or
+     * xcmTransactor.transactThroughSignedMultilocation(...);
+     *
+     * ```
+     */
     function purchase_core() internal {
         require(goalReached(), "Goal not reached yet");
         require(!succeeded, "Core already purchased");
