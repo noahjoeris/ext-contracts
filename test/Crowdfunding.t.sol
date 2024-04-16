@@ -88,6 +88,17 @@ contract FundraiserTest is Test {
         vm.stopPrank();
     }
 
+    function test_withdraw_RevertsIf_PayoutAlreadyMade() public {
+        vm.startPrank(contributor);
+        fundraiser.contribute{value: 2 ether}();
+
+        fundraiser.payout();
+
+        vm.expectRevert("Your funds were already used to buy a core");
+        fundraiser.withdraw();
+        vm.stopPrank();
+    }
+
     function test_withdraw_RevertWhen_NoContributions() public {
         vm.expectRevert("No contributions to withdraw");
         vm.startPrank(contributor);
@@ -114,9 +125,23 @@ contract FundraiserTest is Test {
         fundraiser.cancelFundraiser();
     }
 
+    function test_cancelFundraiser_RevertWhen_CancelTwice() public {
+        vm.startPrank(owner);
+        fundraiser.cancelFundraiser();
+        vm.expectRevert("Fundraising is already canceled");
+        fundraiser.cancelFundraiser();
+        vm.stopPrank();
+    }
+
     function test_cancelFundraiser_RevertWhen_PayoutMade() public {
-        vm.expectRevert();
-        // todo payout
+        vm.prank(contributor);
+        fundraiser.contribute{value: 1 ether}();
+        fundraiser.payout();
+
+        vm.expectRevert(
+            "Fundraising is already finished and cannot be canceled"
+        );
+        vm.prank(owner);
         fundraiser.cancelFundraiser();
     }
 
@@ -134,5 +159,15 @@ contract FundraiserTest is Test {
 
         assertEq(postBalance - preBalance, fundraiser.totalContributed());
         assertTrue(fundraiser.succeeded());
+    }
+
+    function test_payout_RevertWhen_GoalNotReached() public {
+        vm.prank(contributor);
+        fundraiser.contribute{value: 0.7 ether}();
+        assertFalse(fundraiser.goalReached());
+
+        // payout
+        vm.expectRevert("Goal not reached yet");
+        fundraiser.payout();
     }
 }

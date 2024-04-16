@@ -57,6 +57,7 @@ contract Fundraiser is Ownable {
     /// @notice Function to contribute to the fundraising campaign
     function contribute() public payable {
         require(!canceled, "The fundraising was canceled");
+        require(!succeeded, "Fundraising already completed");
         require(msg.value > 0, "Contribution must be greater than 0");
         require(!goalReached(), "Goal has already been reached");
 
