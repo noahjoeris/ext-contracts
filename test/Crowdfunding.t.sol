@@ -35,6 +35,14 @@ contract FundraiserTest is Test {
         assertEq(fundraiser.contributions(contributor), 0.5 ether);
     }
 
+    function test_contribute_MoreThanNecessary() public {
+        vm.prank(contributor);
+        fundraiser.contribute{value: 5 ether}();
+        assertEq(fundraiser.totalContributed(), 1 ether);
+        assertEq(fundraiser.contributions(contributor), 1 ether);
+        assertEq(contributor.balance, 4 ether);
+    }
+
     function test_contribute_RevertWhen_ContributingAfterCancel() public {
         vm.prank(owner);
         fundraiser.cancelFundraiser();
@@ -75,10 +83,10 @@ contract FundraiserTest is Test {
 
     function test_withdraw_WorksAfterGoalReached() public {
         vm.startPrank(contributor);
-        fundraiser.contribute{value: 2 ether}();
+        fundraiser.contribute{value: 1 ether}();
 
-        assertEq(fundraiser.totalContributed(), 2 ether);
-        assertEq(fundraiser.contributions(contributor), 2 ether); // contributions made
+        assertEq(fundraiser.totalContributed(), 1 ether);
+        assertEq(fundraiser.contributions(contributor), 1 ether); // contributions made
         assertTrue(fundraiser.goalReached());
 
         fundraiser.withdraw();
@@ -106,7 +114,7 @@ contract FundraiserTest is Test {
         fundraiser.withdraw(); // Should revert
 
         fundraiser.contribute{value: 2 ether}();
-        assertEq(fundraiser.contributions(contributor), 2 ether); // contributions made
+        assertEq(fundraiser.contributions(contributor), 1 ether); // contributions made
         vm.stopPrank();
 
         vm.expectRevert("No contributions to withdraw");

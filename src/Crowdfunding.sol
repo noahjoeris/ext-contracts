@@ -66,13 +66,27 @@ contract Fundraiser is Ownable {
         require(msg.value > 0, "Contribution must be greater than 0");
         require(!goalReached(), "Goal has already been reached");
 
-        contributions[msg.sender] = contributions[msg.sender] + (msg.value);
-        totalContributed = totalContributed + (msg.value);
-        emit ContributionReceived(msg.sender, msg.value);
+        // Check if the contribution exceeds the goal
+        uint256 amountToAccept = msg.value;
+        if (totalContributed + msg.value > goal) {
+            amountToAccept = goal - totalContributed;
+        }
+
+        // update state
+        contributions[msg.sender] += amountToAccept;
+        totalContributed += amountToAccept;
+        emit ContributionReceived(msg.sender, amountToAccept);
 
         // Check if the goal has been reached
         if (goalReached()) {
             emit GoalReached(totalContributed);
+        }
+
+        // refund excess amount
+        if (amountToAccept < msg.value) {
+            uint256 excessAmount = msg.value - amountToAccept;
+            (bool sent, ) = payable(msg.sender).call{value: excessAmount}("");
+            require(sent, "Failed to refund excess contribution");
         }
     }
 
@@ -101,6 +115,7 @@ contract Fundraiser is Ownable {
     }
 
     /// @notice Function to pay out the money to the owner once the goal is reached
+    /// @param beneficiary The address to send the funds to
     /// @dev Will be replaced in the future with purchase_core.
     function payout(address beneficiary) public onlyOwner {
         require(goalReached(), "Goal not reached yet");
