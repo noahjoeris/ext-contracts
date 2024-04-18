@@ -45,7 +45,7 @@ contract Fundraiser is Ownable {
     event GoalReached(uint256 totalContributed);
     event MoneyWithdrawn(address contributor, uint256 amount);
     event CampaignCancelled();
-    event Payout(address receiver, uint256 amount);
+    event Payout(address beneficiary, uint256 amount);
 
     /// @notice initializes the fundraising campaign with a specific goal.
     /// @param _goal The goal amount to be raised in the fundraising campaign.
@@ -91,27 +91,27 @@ contract Fundraiser is Ownable {
      *
      * ```
      */
-    function purchase_core() internal {
+    function purchase_core(address beneficiary) internal onlyOwner {
         require(goalReached(), "Goal not reached yet");
         require(!succeeded, "Core already purchased");
         require(!canceled, "The fundraising was canceled");
         succeeded = true;
         // Placeholder for core purchase logic
-        emit Payout(owner(), totalContributed);
+        emit Payout(beneficiary, totalContributed);
     }
 
     /// @notice Function to pay out the money to the owner once the goal is reached
     /// @dev Will be replaced in the future with purchase_core.
-    function payout() public {
+    function payout(address beneficiary) public onlyOwner {
         require(goalReached(), "Goal not reached yet");
         require(!succeeded, "Core already purchased");
         require(!canceled, "The fundraising was canceled");
 
         succeeded = true;
-        (bool sent, ) = payable(owner()).call{value: totalContributed}("");
+        (bool sent, ) = payable(beneficiary).call{value: totalContributed}("");
         require(sent, "Failed to payout");
 
-        emit Payout(owner(), totalContributed);
+        emit Payout(beneficiary, totalContributed);
     }
 
     /// @notice Function for contributors to withdraw their funds. Either if the fundraiser is cancelled or not finished yet.
