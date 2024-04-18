@@ -54,6 +54,11 @@ contract Fundraiser is Ownable {
         goal = _goal;
     }
 
+    /// @notice Receive function to handle plain ETH or GLMR transfers
+    receive() external payable {
+        contribute();
+    }
+
     /// @notice Function to contribute to the fundraising campaign
     function contribute() public payable {
         require(!canceled, "The fundraising was canceled");
