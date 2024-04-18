@@ -76,9 +76,23 @@ contract FundraiserTest is Test {
         fundraiser.contribute{value: 0.5 ether}();
         assertEq(fundraiser.contributions(contributor), 0.5 ether); // contributions made
 
-        fundraiser.withdraw();
+        fundraiser.withdraw(0.5 ether);
         vm.stopPrank();
         assertEq(fundraiser.contributions(contributor), 0); // contributions withdrawn
+    }
+
+    function test_withdraw_WorksPartially() public {
+        vm.startPrank(contributor);
+        fundraiser.contribute{value: 0.5 ether}();
+        assertEq(fundraiser.contributions(contributor), 0.5 ether); // contributions made
+        assertEq(fundraiser.totalContributed(), 0.5 ether);
+        assertEq(contributor.balance, 4.5 ether);
+
+        fundraiser.withdraw(0.2 ether); // partial withdraw
+        assertEq(fundraiser.contributions(contributor), 0.3 ether);
+        assertEq(fundraiser.totalContributed(), 0.3 ether);
+        assertEq(contributor.balance, 4.7 ether);
+        vm.stopPrank();
     }
 
     function test_withdraw_WorksAfterGoalReached() public {
@@ -89,7 +103,7 @@ contract FundraiserTest is Test {
         assertEq(fundraiser.contributions(contributor), 1 ether); // contributions made
         assertTrue(fundraiser.goalReached());
 
-        fundraiser.withdraw();
+        fundraiser.withdraw(1 ether);
         assertEq(fundraiser.contributions(contributor), 0); // contributions withdrawn
         assertEq(fundraiser.totalContributed(), 0 ether); // totalContributed reset
         assertFalse(fundraiser.goalReached());
@@ -105,13 +119,13 @@ contract FundraiserTest is Test {
 
         vm.expectRevert("Your funds were already used to buy a core");
         vm.prank(contributor);
-        fundraiser.withdraw();
+        fundraiser.withdraw(1 ether);
     }
 
     function test_withdraw_RevertWhen_NoContributions() public {
         vm.expectRevert("No contributions to withdraw");
         vm.startPrank(contributor);
-        fundraiser.withdraw(); // Should revert
+        fundraiser.withdraw(0.1 ether); // Should revert
 
         fundraiser.contribute{value: 2 ether}();
         assertEq(fundraiser.contributions(contributor), 1 ether); // contributions made
@@ -119,7 +133,17 @@ contract FundraiserTest is Test {
 
         vm.expectRevert("No contributions to withdraw");
         vm.prank(contributor2);
-        fundraiser.withdraw(); // Different contributor - Should revert
+        fundraiser.withdraw(0.2 ether); // Different contributor - Should revert
+    }
+
+    function test_withdraw_RevertIf_WithdrawTooMuch() public {
+        vm.startPrank(contributor);
+        fundraiser.contribute{value: 0.8 ether}();
+        assertEq(fundraiser.contributions(contributor), 0.8 ether); // contributions made
+
+        vm.expectRevert("Not enough funds to withdraw");
+        fundraiser.withdraw(0.9 ether); // Should revert
+        vm.stopPrank();
     }
 
     function test_cancelFundraiser_Works() public {

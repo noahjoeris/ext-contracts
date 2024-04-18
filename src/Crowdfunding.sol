@@ -130,15 +130,22 @@ contract Fundraiser is Ownable {
     }
 
     /// @notice Function for contributors to withdraw their funds. Either if the fundraiser is cancelled or not finished yet.
-    function withdraw() public {
-        require(contributions[msg.sender] > 0, "No contributions to withdraw");
+    /// @param amount The amount to withdraw
+    function withdraw(uint256 amount) public {
+        uint256 availableFunds = contributions[msg.sender];
+        require(availableFunds > 0, "No contributions to withdraw");
         require(!succeeded, "Your funds were already used to buy a core");
+        require(availableFunds >= amount, "Not enough funds to withdraw");
 
-        uint256 contributedAmount = contributions[msg.sender];
-        contributions[msg.sender] = 0;
-        totalContributed = totalContributed - contributedAmount;
-        payable(msg.sender).transfer(contributedAmount);
-        emit MoneyWithdrawn(msg.sender, contributedAmount);
+        // update state
+        contributions[msg.sender] = availableFunds - amount;
+        totalContributed -= amount;
+
+        // send funds
+        (bool sent, ) = payable(msg.sender).call{value: amount}("");
+        require(sent, "Failed to withdraw funds");
+
+        emit MoneyWithdrawn(msg.sender, amount);
     }
 
     /// @notice Function for the owner to cancel the fundraising campaign. Contributors can withdraw their funds after the campaign is canceled.
